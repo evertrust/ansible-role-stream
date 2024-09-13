@@ -1,0 +1,40 @@
+---
+# defaults file for stream
+
+stream_version: 2.5.7-1
+
+stream_licence_dest_path: /opt/stream/etc/stream.lic
+nginx_certs_directory_path: /etc/nginx/ssl
+stream_cert_key_size: 4096
+stream_cert_key_type: RSA
+stream_cert_C: FR
+stream_cert_O: org
+stream_cert_OU: ou
+stream_cert_CN: cn
+stream_hashing_algo: "sha256"
+path_to_template_default_stream: etc_default_stream.j2
+path_to_template_etc_hosts: etc_hosts.j2
+path_to_template_hosts_allowed: hosts_allowed.j2
+path_to_template_http_conf: http_conf.j2
+path_to_template_https_conf: https_conf.j2
+path_to_default_stream: /etc/default/stream
+path_to_etc_hosts: /etc/hosts
+path_to_hosts_allowed: /opt/stream/etc/conf.d/stream-extra.conf
+path_to_stream_http_conf: /opt/stream/etc/conf.d/stream-http.conf
+path_to_stream_https_conf: /opt/stream/etc/conf.d/stream-https.conf
+
+stream_generate_default_cert: true
+stream_csr: "" #path to the web server certificate csr
+stream_pem: "" #path to the web server certificate pem
+stream_key: "" #path to the key
+stream_chain_pem: "" #path to the certificate's trust chain
+
+web_server: nginx
+
+stream_dependencies_list:
+  - "{{ web_server }}"
+  - postfix
+  - firewalld
+
+
+

@@ -1,0 +1,26 @@
+---
+# vars file for stream
+
+play_http_secret_key: http_secret_key
+stream_default_ssv_key: test_ssv_key
+stream_event_seal_secret: event_seal_secret
+
+stream_version: 2.0.6-1
+stream_pkg_uri: "https://repo.evertrust.io/repository/stream-rpm/stream-{{ stream_version }}.x86_64.rpm"
+sonatype_username: login
+sonatype_pwd: pwd
+
+stream_licence_src_path: ../../../licences/stream.lic
+
+mongodb_uri: "mongodb://stream_db_admin:AComplexPassword@vdo-mongodb-database:27017/stream?authSource=admin"
+mongodb_org_repo_uri: https://repo.mongodb.org/yum/redhat/9Server/mongodb-org/6.0/aarch64/RPMS/mongodb-mongosh-2.2.9.aarch64.rpm
+
+stream_hostname_node1: stream-n1
+stream_hostname_node2: stream-n2
+stream_hostname_node3: stream-n3
+mongodb_hostname: mongodb-database
+load_balancer_hostname: load_balancer
+
+
+
+

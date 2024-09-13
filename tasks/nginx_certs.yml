@@ -1,0 +1,76 @@
+---
+
+##If no certificate has been set up in variables
+- name: Nginx_certs - Ensure SSL directory exists
+  ansible.builtin.file:
+    path: "{{ nginx_certs_directory_path }}"
+    state: directory
+    mode: '0755'
+
+- fail:
+    msg: "You should set all of the stream_csr etc... "
+  when: stream_generate_default_cert == false and (stream_csr == "" or stream_pem == "" or stream_key == "")
+
+- name: Nginx_certs - Generate OpenSSL key - default
+  ansible.builtin.command:
+    cmd: "openssl genpkey -algorithm {{ stream_cert_key_type }} -out {{ [nginx_certs_directory_path, 'stream.key'] | path_join }} -pkeyopt rsa_keygen_bits:{{ stream_cert_key_size }}"
+    creates: "{{ [nginx_certs_directory_path, 'stream.key'] | path_join }}"
+  when: stream_generate_default_cert == true
+  notify: "Stream - Handlers - Restart Nginx services"
+  register: generate_key
+
+- name: Nginx_certs - Generate OpenSSL CSR - default
+  ansible.builtin.command:
+    cmd: >
+      openssl req -new -key {{ [nginx_certs_directory_path, 'stream.key'] | path_join }} -out {{ [nginx_certs_directory_path, 'stream.csr'] | path_join }}
+      -subj "/C={{ stream_cert_C }}/O={{ stream_cert_O }}/OU={{ stream_cert_OU }}/CN={{ stream_cert_CN }}"
+    creates: "{{ [nginx_certs_directory_path, 'stream.csr'] | path_join }}"
+  when: stream_generate_default_cert == true
+  notify: "Stream - Handlers - Restart Nginx services"
+  register: generate_csr
+
+- name: Nginx_certs - Self-sign the certificate - default
+  ansible.builtin.command:
+    cmd: >
+      openssl x509 -req -days 365 -in {{ [nginx_certs_directory_path, 'stream.csr'] | path_join }}
+      -signkey {{ [nginx_certs_directory_path, 'stream.key'] | path_join }} -out {{ [nginx_certs_directory_path, 'stream.pem'] | path_join }}
+      -set_serial 01 -days 365 -sha256
+    creates: "{{ [nginx_certs_directory_path, 'stream.pem'] | path_join }}"
+  when: stream_generate_default_cert == true
+  notify: "Stream - Handlers - Restart Nginx services"
+  register: sign_certificate
+
+- name: Nginx_certs - Create the certificate chain file - default
+  ansible.builtin.copy:
+    src: "{{ [nginx_certs_directory_path, 'stream.pem'] | path_join }}"
+    dest: "{{ [nginx_certs_directory_path, 'stream-chain.pem'] | path_join }}"
+    force: yes
+    remote_src: yes
+  register: chain_pem_created
+  notify: "Stream - Handlers - Restart Nginx services"
+  when: stream_generate_default_cert == true
+
+##If a certificate, its key and its trustchain have been setup
+- name: Nginx_certs - Create stream.key with provided content
+  ansible.builtin.copy:
+    content: "{{  stream_current_file['value']['src'] }}"
+    dest: "{{  stream_current_file['value']['dest'] }}"
+  loop: "{{ stream_custom_certs | dict2items }}"
+  loop_control:
+    loop_var: stream_current_file
+  notify: "Stream - Handlers - Restart Nginx services"
+  when: stream_generate_default_cert == false
+
+##Permissions changes : not incorporated to the cert generation to handle the cases where the certs
+##already exist or have been created using builtin.command
+- name: Nginx_certs - Set permissions and ownership of these files
+  ansible.builtin.file:
+    path: "{{  stream_current_file['value']['dest'] }}"
+    owner: root
+    group: nginx
+    mode: '0640'
+  loop: "{{ stream_custom_certs | dict2items }}"
+  loop_control:
+    loop_var: stream_current_file
+  notify: "Stream - Handlers - Restart Nginx services"
+

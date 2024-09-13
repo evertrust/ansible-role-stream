@@ -1,0 +1,63 @@
+---
+- name: Config - Symlink
+  file:
+    src: /opt/stream/etc/stream-httpd.conf
+    dest: /etc/nginx/conf.d/stream.conf
+    state: link
+    force: yes
+
+- name: Config - Update licence
+  ansible.builtin.copy:
+    src: "{{ stream_licence_src_path }}"
+    dest: "{{ stream_licence_dest_path }}"
+
+- name: Config - File creation /etc/default/stream
+  ansible.builtin.template:
+    src: "{{ path_to_template_default_stream }}"
+    dest: "{{ path_to_default_stream }}"
+
+- name: Config - Update hosts allowed
+  ansible.builtin.template:
+    src: "{{ path_to_template_hosts_allowed }}"
+    dest: "{{ path_to_hosts_allowed }}"
+    
+- name: Config - Update http.conf
+  ansible.builtin.template:
+    src: "{{ path_to_template_http_conf }}"
+    dest: "{{ path_to_stream_http_conf }}"
+
+- name: Config - Update https.conf
+  ansible.builtin.template:
+    src: "{{ path_to_template_https_conf }}"
+    dest: "{{ path_to_stream_https_conf }}"
+
+- name: Nginx_certs - Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Config - Generate the tink key on node 1
+  shell: /opt/stream/sbin/tinkey generate-keyset --out=/opt/stream/etc/stream.keyset > /opt/stream/etc/stream.keyset
+  args:
+    creates: /opt/stream/etc/stream.keyset
+  when: inventory_hostname == "{{ stream_hostname_node1 }}"
+
+- name: Config - Copy keyset file content on control node
+  ansible.builtin.slurp:
+    src: /opt/stream/etc/stream.keyset
+  register: stream_keyset
+  when: inventory_hostname == "{{ stream_hostname_node1 }}"
+  run_once: true
+
+- name: Config - Distribute the file to other nodes
+  ansible.builtin.copy:
+    content: "{{ (stream_keyset['content'] | b64decode) }}"
+    dest: "/opt/stream/etc/stream.keyset"
+  when: inventory_hostname != "{{ stream_hostname_node1 }}"
+
+- name: Config - Set permissions and ownership of these files
+  ansible.builtin.file:
+    path: "/opt/stream/etc/stream.keyset"
+    owner: stream
+    group: stream
+    mode: '0640'
+
+

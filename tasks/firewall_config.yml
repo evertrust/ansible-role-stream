@@ -1,0 +1,47 @@
+---
+
+- name: Firewall Config - Start firewalld service
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: Firewall Config - Open firewall's https service
+  ansible.posix.firewalld:
+    permanent: true
+    service: https
+    state: enabled
+    immediate: true
+  notify: "Stream - Handlers - Restart Nginx services"
+
+- name: Firewall Config - Open firewall's http service
+  ansible.posix.firewalld:
+    permanent: true
+    service: http
+    state: enabled
+    immediate: true
+  notify: "Stream - Handlers - Restart Nginx services"
+
+- name: Firewall Config - Open Akka_HA
+  ansible.posix.firewalld:
+    permanent: true
+    port: 25520/tcp
+    state: enabled
+    immediate: true
+  notify: "Stream - Handlers - Restart Nginx services"
+
+- name: Firewall Config - Open Akka_MGMT
+  ansible.posix.firewalld:
+    permanent: true
+    port: 8558/tcp
+    state: enabled
+    immediate: true
+  notify: "Stream - Handlers - Restart Nginx services"
+
+- name: Firewall Config - Internal API
+  ansible.posix.firewalld:
+    permanent: true
+    port: 9000/tcp
+    state: enabled
+    immediate: true
+  notify: "Stream - Handlers - Restart Nginx services"

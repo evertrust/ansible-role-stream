@@ -1,0 +1,21 @@
+---
+
+- name: Stream - Handlers - Restart Stream service
+  ansible.builtin.systemd:
+    name: stream
+    state: restarted
+    enabled: yes
+  listen: "Stream - Handlers - Restart Stream services"
+
+- name: Stream - nginx - Test Config
+  ansible.builtin.command: nginx -t
+  changed_when: false
+  listen: "Stream - Handlers - Restart Nginx services"
+  become: true
+
+- name: Stream - Nginx - Reload
+  ansible.builtin.service:
+    name: nginx
+    state: restarted
+  listen: "Stream - Handlers - Restart Nginx services"
+  become: true

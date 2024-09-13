@@ -1,0 +1,20 @@
+---
+stream_custom_certs:
+  key:
+    src: "{{ stream_key }}"
+    dest: "{{ [ nginx_certs_directory_path, 'stream.key' ] | path_join }}"
+  pem:
+    src: "{{ stream_pem }}"
+    dest: "{{ [ nginx_certs_directory_path, 'stream.pem' ] | path_join }}"
+  csr:
+    src: "{{ stream_csr }}"
+    dest: "{{ [ nginx_certs_directory_path, 'stream.csr' ] | path_join }}"
+  chain_pem:
+    src: "{{ stream_chain_pem }}"
+    dest: "{{ [ nginx_certs_directory_path, 'stream-chain.pem' ] | path_join }}"
+
+
+
+
+
+
